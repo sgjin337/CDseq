@@ -30,7 +30,7 @@ rule all:
         # TLEN3_bam
         expand("analysis/extract_TLEN3/{samples.sample}.TLEN3.bam", samples=samples.itertuples()),
         expand("analysis/extract_TLEN3/{samples.sample}.TLEN3.bam.bai", samples=samples.itertuples()),
-        # extract_TLEN3_4HNE
+        # extract_TLEN3_8oxoG
         expand("analysis/extract_TLEN3/{samples.sample}.TLEN3.bed", samples=samples.itertuples()),
         expand("analysis/extract_TLEN3/{samples.sample}.TLEN3.sorted.bed.gz", samples=samples.itertuples()),
         expand("analysis/extract_TLEN3/{samples.sample}.TLEN3.sorted.bed.gz.tbi", samples=samples.itertuples()),
@@ -273,8 +273,8 @@ rule TLEN3_bam:
 #         # get sequences from BED (5'-3' + strand by default)
 #         bedtools getfasta -tab -fi {params.ref} -bed {output.bed} -fo {output.seq} 2> {log.get_seq}
 #
-#         # annotate strand based on middle nucleotide: T|C == (+)strand, A|G == (-)strand
-#         awk -v OFS='\t' '{{if( $2 ~ /.[TC]./ ) print $0,"0","+"; else print $0,"0","-"}}' {output.seq} 1> {params.tmp} && mv {params.tmp} {output.seq}
+#         # annotate strand based on middle nucleotide: T|G == (+)strand, A|C == (-)strand
+#         awk -v OFS='\t' '{{if( $2 ~ /.[TG]./ ) print $0,"0","+"; else print $0,"0","-"}}' {output.seq} 1> {params.tmp} && mv {params.tmp} {output.seq}
 #
 #         # add seq, score, strand to BED: [chr, start, stop, name, (seq), score, strand]
 #         paste {output.bed} {output.seq} | cut -f 1,2,3,4,6,7,8 > {params.tmp} && mv {params.tmp} {output.bed}
@@ -288,7 +288,7 @@ rule TLEN3_bam:
 #         tabix {output.sorted_bed_gz}
 #         """
 
-rule extract_TLEN3_4HNE:
+rule extract_TLEN3_8oxoG:
     input:
         TLEN3_bam =         "analysis/extract_TLEN3/{sample}.TLEN3.bam",
     output:
@@ -333,13 +333,13 @@ rule extract_TLEN3_4HNE:
         bedtools getfasta -tab -fi {params.ref} -bed {output.bed} -fo {output.seq} 2> {log.get_seq}
 
         # add strand and score based on middle nucleotide
-        awk -v OFS='\t' '{{if( $2 ~ /.[Aa]./ ) print $0,"1","+"; \
-        else if( $2 ~ /.[Tt]./ ) print $0,"1","-"; \
+        awk -v OFS='\t' '{{if( $2 ~ /.[Gg]./ ) print $0,"1","+"; \
+        else if( $2 ~ /.[Cc]./ ) print $0,"1","-"; \
         else print $0,"0"," "; }}' {output.seq} 1> {params.tmp} && mv {params.tmp} {output.seq}
 
         # print stats
-        awk -v OFS='\t' '{{if( $2 ~ /.[Aa]./ ) print "A","1","+"; \
-        else if( $2 ~ /.[Tt]./ ) print "T","1","-"; \
+        awk -v OFS='\t' '{{if( $2 ~ /.[Gg]./ ) print "G","1","+"; \
+        else if( $2 ~ /.[Cc]./ ) print "C","1","-"; \
         else print substr($2, 2, 1),"0"," "; }}' {output.seq} 1> {output.cut_stats}
 
         # add seq, score, strand to BED: [chr, start, stop, name, (seq), score, strand]
